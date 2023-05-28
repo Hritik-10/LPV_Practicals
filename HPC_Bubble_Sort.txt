@@ -1,0 +1,72 @@
+
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <omp.h>
+using namespace std;
+void parallelBubbleSort(int *array, int n) 
+{
+  int i, j;
+  #pragma omp parallel for private(i, j) shared(array)
+  for (i = 0; i < n-1; i++) 
+  {
+    for (j = 0; j < n-i-1; j++) 
+    {
+      if (array[j] > array[j+1]) {
+      // Swap elements
+      int temp = array[j];
+      array[j] = array[j+1];
+      array[j+1] = temp;
+    }
+ }
+}
+}
+int main() {
+int n;
+cout << "Enter the size of the array: ";
+cin >> n;
+int *array = new int[n];
+ 
+for (int i = 0; i < n; i++) {
+    int VAR;
+    cout<<"ENTER ELEMENT AT INDEX "<<i<<" : ";
+    cin>>VAR;
+    cout<<endl;
+    array[i] = VAR;
+}
+cout << "Original Array: ";
+for (int i = 0; i < n; i++) {
+cout << array[i] << " ";
+}
+cout << endl;
+
+parallelBubbleSort(array, n);
+cout << "Sorted Array: ";
+for (int i = 0; i < n; i++) {
+cout << array[i] << " ";
+}
+cout << endl;
+delete [] array;
+return 0;
+}
+
+
+/*
+
+Enter the size of the array: 6
+ENTER ELEMENT AT INDEX 0 : 23
+ENTER ELEMENT AT INDEX 1 : 54
+ENTER ELEMENT AT INDEX 2 : 34
+ENTER ELEMENT AT INDEX 3 : 2
+ENTER ELEMENT AT INDEX 4 : 5
+ENTER ELEMENT AT INDEX 5 : 44
+Original Array: 23 54 34 2 5 44 
+Sorted Array: 2 5 23 34 44 54 
+
+
+
+1. Time Complexity Of parallel Bubble sort in best case is( when all data is already in sorted form):O(n)
+2. Time Complexity Of parallel Bubble sort in worst case is: O(n logn)
+3. Time Complexity Of parallel Bubble sort in average case is: O(n logn)
+
+*/

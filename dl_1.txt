@@ -1,0 +1,175 @@
+""" COMMENT |||||||||||||||||||||||||||||||||||||||||||||||||||
+CRIM: Per capita crime rate by town.
+ZN: Proportion of residential land zoned for lots over 25,000 sq.ft.
+INDUS: Proportion of non-retail business acres per town.
+CHAS: Charles River dummy variable (1 if the tract bounds the river; 0 otherwise).
+NOX: Nitric oxides concentration (parts per 10 million).
+RM: Average number of rooms per dwelling.
+AGE: Proportion of owner-occupied units built prior to 1940.
+DIS: Weighted distances to five Boston employment centers.
+RAD: Index of accessibility to radial highways.
+TAX: Full-value property tax rate per $10,000.
+PTRATIO: Pupil-teacher ratio by town.
+B: 1000(Bk - 0.63)^2 where Bk is the proportion of Black individuals by town.
+LSTAT: Percentage of lower status of the population.
+target: Median value of owner-occupied homes in $1000s.
+|||||||||||||||||||||||||||||||||||||||||||||||||||  """
+
+
+import pandas as pd
+import numpy as np
+from sklearn import metrics
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+import warnings
+warnings.filterwarnings("ignore")
+
+------------------------ ERROR ---------------------------------
+from sklearn.datasets import load_boston
+boston = load_boston()
+
+data = pd.DataFrame(boston.data)
+data.head()
+
+data.columns = boston.feature_names
+data.head()
+
+data['PRICE'] = boston.target 
+-----------------------------------------------------------------
+
+------------------ REPLACEMENT ----------------------------------
+
+from sklearn.datasets import fetch_openml
+import pandas as pd
+
+boston = fetch_openml(name='boston', version=1)
+
+data = pd.DataFrame(boston.data, columns=boston.feature_names)
+data['PRICE'] = boston.target
+
+data.head()
+
+------------------------------------------------------------------
+
+
+data.shape
+
+data.columns
+
+data.dtypes
+
+data.nunique()
+
+data.isnull().sum()
+
+data[data.isnull().any(axis=1)]
+
+data.describe()
+
+corr = data.corr()
+corr.shape
+
+plt.figure(figsize=(20,20))
+sns.heatmap(corr, cbar=True, square= True, fmt='.1f', annot=True, annot_kws={'size':15}, cmap='gray')
+
+X = data.drop(['PRICE'], axis = 1)
+y = data['PRICE']
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X,y, test_size = 0.3, random_state = 4)
+
+from sklearn.linear_model import LinearRegression
+
+lm = LinearRegression()
+lm.fit(X_train, y_train)
+
+lm.intercept_
+
+coeffcients = pd.DataFrame([X_train.columns,lm.coef_]).T
+coeffcients = coeffcients.rename(columns={0: 'Attribute', 1: 'Coefficients'})
+coeffcients
+
+# using StandardScaler to resolve "TypeError: can't multiply sequence by non-int of type 'float'", 
+#typically occurs when you try to perform multiplication between 
+# a sequence (e.g., a list or array) and a non-integer float value for y_pred = lm.predict(X_train)  .
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train_scaled = sc.fit_transform(X_train)
+X_test_scaled = sc.transform(X_test)
+lm.fit(X_train_scaled, y_train)
+y_pred = lm.predict(X_train_scaled)
+
+
+print('R^2:',metrics.r2_score(y_train, y_pred))
+print('Adjusted R^2:',1 - (1-metrics.r2_score(y_train, y_pred))*(len(y_train)-1)/(len(y_train)-X_train.shape[1]-1))
+print('MAE:',metrics.mean_absolute_error(y_train, y_pred))
+print('MSE:',metrics.mean_squared_error(y_train, y_pred))
+print('RMSE:',np.sqrt(metrics.mean_squared_error(y_train, y_pred)))
+
+plt.scatter(y_train, y_pred)
+plt.xlabel("Prices")
+plt.ylabel("Predicted prices")
+plt.title("Prices vs Predicted prices")
+plt.show()
+
+plt.scatter(y_pred,y_train-y_pred)
+plt.title("Predicted vs residuals")
+plt.xlabel("Predicted")
+plt.ylabel("Residuals")
+plt.show()
+
+sns.distplot(y_train-y_pred)
+plt.title("Histogram of Residuals")
+plt.xlabel("Residuals")
+plt.ylabel("Frequency")
+plt.show()
+
+
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train_scaled = sc.fit_transform(X_train)
+X_test_scaled = sc.transform(X_test)
+lm.fit(X_train_scaled, y_train)
+y_test_pred = lm.predict(X_test_scaled)
+
+
+acc_linreg = metrics.r2_score(y_test, y_test_pred)
+print('R^2:', acc_linreg)
+print('Adjusted R^2:',1 - (1-metrics.r2_score(y_test, y_test_pred))*(len(y_test)-1)/(len(y_test)-X_test.shape[1]-1))
+print('MAE:',metrics.mean_absolute_error(y_test, y_test_pred))
+print('MSE:',metrics.mean_squared_error(y_test, y_test_pred))
+print('RMSE:',np.sqrt(metrics.mean_squared_error(y_test, y_test_pred)))
+
+
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+
+import keras
+from keras.layers import Dense, Activation,Dropout
+from keras.models import Sequential
+
+model = Sequential()
+
+model.add(Dense(128,activation  = 'relu',input_dim =13))
+model.add(Dense(64,activation  = 'relu'))
+model.add(Dense(32,activation  = 'relu'))
+model.add(Dense(16,activation  = 'relu'))
+model.add(Dense(1))
+model.compile(optimizer = 'adam',loss = 'mean_squared_error')
+
+model.fit(X_train, y_train, epochs = 100)
+
+y_pred = model.predict(X_test)
+
+from sklearn.metrics import r2_score
+r2 = r2_score(y_test, y_pred)
+print(r2)
+
+from sklearn.metrics import mean_squared_error
+rmse = (np.sqrt(mean_squared_error(y_test, y_pred)))
+print(rmse)
